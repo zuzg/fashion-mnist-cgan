@@ -1,9 +1,9 @@
 import torch.nn as nn
+import wandb
 
 from src.config import ExperimentConfig
 from src.data.preprocess import get_dataloaders, get_datasets
-from src.models.discriminator import Discriminator
-from src.models.generator import Generator
+from src.models.cgan import Discriminator, Generator
 from src.train.train_loop import training_loop
 from src.train.eval import generate_preds
 
@@ -11,6 +11,12 @@ from src.train.eval import generate_preds
 class Experiment:
     def __init__(self, cfg: ExperimentConfig) -> None:
         self.cfg = cfg
+        if self.cfg.wandb:
+            wandb.init(
+                project="fashion-mnist",
+                # name=f"cgan",
+                config=vars(self.cfg),
+            )
 
     def run(self) -> None:
         train_dataset, test_dataset = get_datasets()
@@ -19,4 +25,4 @@ class Experiment:
         generator = Generator().to(self.cfg.device)
         criterion = nn.BCELoss()
         training_loop(discriminator, generator, trainloader, criterion, self.cfg)
-        generate_preds(generator, train_dataset.classes, self.cfg.device)
+        generate_preds(generator, train_dataset.classes, self.cfg)

@@ -2,8 +2,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
+import wandb
 from torch.utils.data import DataLoader
 from torchvision.utils import make_grid
+
+from src.config import ExperimentConfig
 
 
 def evaluate(
@@ -49,10 +52,10 @@ def evaluate(
     return avg_g_loss, avg_d_loss
 
 
-def generate_preds(generator, classes, device):
+def generate_preds(generator: nn.Module, classes: list[str], cfg: ExperimentConfig):
     # Generate latent vectors (z) and corresponding labels
-    z = torch.randn(100, 100, device=device)
-    labels = torch.tensor([i for _ in range(10) for i in range(10)], device=device)
+    z = torch.randn(100, 100, device=cfg.device)
+    labels = torch.tensor([i for _ in range(10) for i in range(10)], device=cfg.device)
 
     # Generate sample images using the generator
     generator.eval()
@@ -70,4 +73,5 @@ def generate_preds(generator, classes, device):
         rotation=45,
         fontsize=20,
     )
-    plt.show()
+    if cfg.wandb:
+        wandb.log({"final_preds": plt})

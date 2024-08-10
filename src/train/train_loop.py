@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
+import wandb
 from torch import Tensor
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
@@ -93,5 +94,7 @@ def training_loop(
             labels = torch.arange(9, device=cfg.device)
             sample_images = generator(z, labels).unsqueeze(1).cpu()
             grid = make_grid(sample_images, nrow=3, normalize=True).permute(1, 2, 0).numpy()
-            plt.imshow(grid)
-            plt.show()
+        if cfg.wandb:
+            img = wandb.Image(grid)
+            wandb.log({"preds": img})
+            wandb.log({"metrics/train/G_loss": g_loss, "metrics/train/D_loss": d_loss})
