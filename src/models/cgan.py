@@ -2,11 +2,12 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
+from src.models.base_gan import BaseGenerator, BaseDiscriminator
 
-class Generator(nn.Module):
+
+class CGenerator(BaseGenerator):
     def __init__(self):
         super().__init__()
-        self.label_emb = nn.Embedding(10, 10)
         self.model = nn.Sequential(
             nn.Linear(110, 256),
             nn.LeakyReLU(0.2, inplace=True),
@@ -26,7 +27,7 @@ class Generator(nn.Module):
         return out.view(x.size(0), 28, 28)
 
 
-class Discriminator(nn.Module):
+class CDiscriminator(BaseDiscriminator):
     def __init__(self):
         super().__init__()
         self.label_emb = nn.Embedding(10, 10)

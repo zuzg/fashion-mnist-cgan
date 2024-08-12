@@ -1,4 +1,5 @@
-import matplotlib.pyplot as plt
+import logging
+
 import torch
 import torch.nn as nn
 import wandb
@@ -9,6 +10,9 @@ from torchvision.utils import make_grid
 from tqdm import tqdm
 
 from src.config import ExperimentConfig
+
+
+log = logging.getLogger(__name__)
 
 
 def generator_train_step(
@@ -65,13 +69,14 @@ def training_loop(
     trainloader: DataLoader,
     criterion: nn.Module,
     cfg: ExperimentConfig,
+    unsq: bool,
 ) -> None:
     d_optimizer = torch.optim.Adam(discriminator.parameters(), lr=cfg.lr)
     g_optimizer = torch.optim.Adam(generator.parameters(), lr=cfg.lr)
     d_scheduler = StepLR(d_optimizer, step_size=10, gamma=0.5)
     g_scheduler = StepLR(g_optimizer, step_size=10, gamma=0.5)
     for epoch in range(cfg.num_epochs):
-        print(f"Starting epoch {epoch}...")
+        log.info(f"Starting epoch {epoch}...")
         generator.train()
 
         for images, labels in tqdm(trainloader):
@@ -89,10 +94,12 @@ def training_loop(
 
         generator.eval()
         with torch.no_grad():
-            print(f"g_loss: {g_loss}, d_loss: {d_loss}")
+            log.info(f"g_loss: {g_loss}, d_loss: {d_loss}")
             z = torch.randn(9, 100, device=cfg.device)
             labels = torch.arange(9, device=cfg.device)
-            sample_images = generator(z, labels).unsqueeze(1).cpu()
+            sample_images = generator(z, labels).cpu()
+            if unsq:
+                sample_images = sample_images.unsqueeze(1)
             grid = make_grid(sample_images, nrow=3, normalize=True).permute(1, 2, 0).numpy()
         if cfg.wandb:
             img = wandb.Image(grid)

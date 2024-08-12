@@ -6,6 +6,7 @@ from src.config import ExperimentConfig
 def parse_args() -> ExperimentConfig:
     parser = argparse.ArgumentParser()
 
+    parser.add_argument("--model", type=str, default="CGAN")
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--num_epochs", type=int, default=5)
     parser.add_argument("--lr", type=float, default=1e-4)

@@ -52,7 +52,7 @@ def evaluate(
     return avg_g_loss, avg_d_loss
 
 
-def generate_preds(generator: nn.Module, classes: list[str], cfg: ExperimentConfig):
+def generate_preds(generator: nn.Module, classes: list[str], cfg: ExperimentConfig, unsq: bool):
     # Generate latent vectors (z) and corresponding labels
     z = torch.randn(100, 100, device=cfg.device)
     labels = torch.tensor([i for _ in range(10) for i in range(10)], device=cfg.device)
@@ -60,8 +60,9 @@ def generate_preds(generator: nn.Module, classes: list[str], cfg: ExperimentConf
     # Generate sample images using the generator
     generator.eval()
     with torch.no_grad():
-        sample_images = generator(z, labels).unsqueeze(1).cpu()
-
+        sample_images = generator(z, labels).cpu()
+        if unsq:
+            sample_images = sample_images.unsqueeze(1)
     grid = make_grid(sample_images, nrow=10, normalize=True).permute(1, 2, 0).numpy()
 
     fig, ax = plt.subplots(figsize=(15, 15))
