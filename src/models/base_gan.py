@@ -3,11 +3,9 @@ from abc import ABC, abstractmethod
 import torch.nn as nn
 from torch import Tensor
 
-from src.consts import IMG_SIZE
-
 
 class BaseGenerator(nn.Module, ABC):
-    def __init__(self, img_size: int = IMG_SIZE) -> None:
+    def __init__(self, img_size: int) -> None:
         super().__init__()
         self.img_size = img_size
         self.label_emb = nn.Embedding(10, 10)
@@ -18,7 +16,7 @@ class BaseGenerator(nn.Module, ABC):
 
 
 class BaseDiscriminator(nn.Module, ABC):
-    def __init__(self, dropout: float, img_size: int = IMG_SIZE) -> None:
+    def __init__(self, dropout: float, img_size: int) -> None:
         super().__init__()
         self.dropout = dropout
         self.img_size = img_size

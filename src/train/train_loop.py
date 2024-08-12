@@ -10,8 +10,10 @@ from torchvision.utils import make_grid
 from tqdm import tqdm
 
 from src.config import ExperimentConfig
+from src.train.eval import evaluate
 
 
+logging.basicConfig(level=logging.NOTSET)
 log = logging.getLogger(__name__)
 
 
@@ -67,6 +69,7 @@ def training_loop(
     discriminator: nn.Module,
     generator: nn.Module,
     trainloader: DataLoader,
+    testloader: DataLoader,
     criterion: nn.Module,
     cfg: ExperimentConfig,
     unsq: bool,
@@ -101,7 +104,10 @@ def training_loop(
             if unsq:
                 sample_images = sample_images.unsqueeze(1)
             grid = make_grid(sample_images, nrow=3, normalize=True).permute(1, 2, 0).numpy()
+        avg_g_loss, avg_d_loss = evaluate(generator, discriminator, testloader, criterion, cfg.device)
+        log.info(f"Test Set - g_loss: {avg_g_loss:.4f}, d_loss: {avg_d_loss:.4f}")
         if cfg.wandb:
             img = wandb.Image(grid)
             wandb.log({"preds": img})
             wandb.log({"metrics/train/G_loss": g_loss, "metrics/train/D_loss": d_loss})
+            wandb.log({"metrics/test/G_loss": avg_g_loss, "metrics/test/D_loss": avg_d_loss})

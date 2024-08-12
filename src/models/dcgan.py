@@ -2,12 +2,11 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from src.consts import IMG_SIZE
 from src.models.base_gan import BaseGenerator, BaseDiscriminator
 
 
 class DCGenerator(BaseGenerator):
-    def __init__(self, img_size: int = IMG_SIZE):
+    def __init__(self, img_size: int):
         super().__init__(img_size)
         self.init_size = self.img_size // 4
         self.l1 = nn.Sequential(nn.Linear(110, 128 * self.init_size**2))
@@ -36,7 +35,7 @@ class DCGenerator(BaseGenerator):
 
 
 class DCDiscriminator(BaseDiscriminator):
-    def __init__(self, dropout: float = 0.25, img_size: int = IMG_SIZE):
+    def __init__(self, img_size: int, dropout: float = 0.25):
         super().__init__(dropout, img_size)
         self.label_emb = nn.Embedding(10, 1 * self.img_size**2)
 
