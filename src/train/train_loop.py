@@ -13,7 +13,7 @@ from src.config import ExperimentConfig
 from src.train.eval import evaluate
 
 
-logging.basicConfig(level=logging.NOTSET)
+logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
 
