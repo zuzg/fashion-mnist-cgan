@@ -2,12 +2,13 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
+from src.consts import IMG_SIZE
 from src.models.base_gan import BaseGenerator, BaseDiscriminator
 
 
 class CGenerator(BaseGenerator):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, img_size: int = IMG_SIZE):
+        super().__init__(img_size)
         self.model = nn.Sequential(
             nn.Linear(110, 256),
             nn.LeakyReLU(0.2, inplace=True),
@@ -24,29 +25,29 @@ class CGenerator(BaseGenerator):
         c = self.label_emb(labels)
         x = torch.cat([z, c], 1)
         out = self.model(x)
-        return out.view(x.size(0), 28, 28)
+        return out.view(x.size(0), self.img_size, self.img_size)
 
 
 class CDiscriminator(BaseDiscriminator):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, dropout: float = 0.25, img_size: int = IMG_SIZE):
+        super().__init__(dropout, img_size)
         self.label_emb = nn.Embedding(10, 10)
         self.model = nn.Sequential(
             nn.Linear(794, 1024),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Dropout(0.3),
+            nn.Dropout(self.dropout),
             nn.Linear(1024, 512),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Dropout(0.3),
+            nn.Dropout(self.dropout),
             nn.Linear(512, 256),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Dropout(0.3),
+            nn.Dropout(self.dropout),
             nn.Linear(256, 1),
             nn.Sigmoid(),
         )
 
     def forward(self, x: Tensor, labels: Tensor) -> Tensor:
-        x = x.view(x.size(0), 784)
+        x = x.view(x.size(0), self.img_size**2)
         c = self.label_emb(labels)
         x = torch.cat([x, c], 1)
         out = self.model(x)
