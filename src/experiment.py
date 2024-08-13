@@ -9,7 +9,19 @@ from src.train.eval import generate_preds
 
 
 class Experiment:
+    """
+    Class for running the experiment.
+
+    Attributes:
+        cfg (ExperimentConfig): The experiment configuration.
+    """
     def __init__(self, cfg: ExperimentConfig) -> None:
+        """
+        Initialize the Experiment.
+
+        Args:
+            cfg (ExperimentConfig): The experiment configuration.
+        """
         self.cfg = cfg
         if self.cfg.wandb:
             wandb.init(
@@ -19,6 +31,12 @@ class Experiment:
             )
 
     def run(self) -> None:
+        """
+        Run the experiment.
+
+        Returns:
+            None. Trains the model, evaluates it, and generates predictions.
+        """
         train_dataset, test_dataset = get_datasets()
         trainloader, testloader = get_dataloaders(train_dataset, test_dataset, self.cfg.batch_size)
         model = MODELS_DICT[self.cfg.model]

@@ -12,6 +12,19 @@ from src.config import ExperimentConfig
 def evaluate(
     generator: nn.Module, discriminator: nn.Module, testloader: DataLoader, criterion: nn.Module, device: str
 ) -> tuple[float]:
+    """
+    Evaluate the generator and discriminator models using the given test data.
+
+    Args:
+        generator (nn.Module): The generator model.
+        discriminator (nn.Module): The discriminator model.
+        testloader (DataLoader): The test data loader.
+        criterion (nn.Module): The loss function.
+        device (str): The device type ('cpu' or 'cuda').
+
+    Returns:
+        tuple[float]: The average generator and discriminator losses.
+    """
     generator.eval()
     discriminator.eval()
 
@@ -53,6 +66,18 @@ def evaluate(
 
 
 def generate_preds(generator: nn.Module, classes: list[str], cfg: ExperimentConfig, unsq: bool):
+    """
+    Generate predictions using the generator model.
+
+    Args:
+        generator (nn.Module): The generator model.
+        classes (list[str]): The list of classes.
+        cfg (ExperimentConfig): The experiment configuration.
+        unsq (bool): If True, un-squeeze the sample images.
+
+    Returns:
+        None. Saves the prediction grid as an image and logs to Weights and Biases if enabled.
+    """
     # Generate latent vectors (z) and corresponding labels
     z = torch.randn(100, 100, device=cfg.device)
     labels = torch.tensor([i for _ in range(10) for i in range(10)], device=cfg.device)

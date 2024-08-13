@@ -25,6 +25,20 @@ def generator_train_step(
     criterion: nn.Module,
     device: str,
 ) -> float:
+    """
+    Performs a training step for the generator.
+
+    Args:
+        discriminator (nn.Module): The discriminator model.
+        generator (nn.Module): The generator model.
+        g_optimizer (torch.optim.Optimizer): The generator's optimizer.
+        batch_size (int): The batch size.
+        criterion (nn.Module): The loss function.
+        device (str): The device type ('cpu' or 'cuda').
+
+    Returns:
+        float: The generator loss.
+    """
     g_optimizer.zero_grad()
     z = torch.randn(batch_size, 100, device=device)
     fake_labels = torch.randint(0, 10, (batch_size,), device=device)
@@ -46,6 +60,22 @@ def discriminator_train_step(
     labels: Tensor,
     device: str,
 ) -> float:
+    """
+    Performs a training step for the discriminator.
+
+    Args:
+        discriminator (nn.Module): The discriminator model.
+        generator (nn.Module): The generator model.
+        d_optimizer (torch.optim.Optimizer): The discriminator's optimizer.
+        batch_size (int): The batch size.
+        criterion (nn.Module): The loss function.
+        real_images (Tensor): The real images.
+        labels (Tensor): The labels for the images.
+        device (str): The device type ('cpu' or 'cuda').
+
+    Returns:
+        float: The discriminator loss.
+    """
     d_optimizer.zero_grad()
 
     # Train with real images
@@ -74,6 +104,18 @@ def training_loop(
     cfg: ExperimentConfig,
     unsq: bool,
 ) -> None:
+    """
+    The main training loop.
+
+    Args:
+        discriminator (nn.Module): The discriminator model.
+        generator (nn.Module): The generator model.
+        trainloader (DataLoader): The training data loader.
+        testloader (DataLoader): The testing data loader.
+        criterion (nn.Module): The loss function.
+        cfg (ExperimentConfig): The experiment configuration.
+        unsq (bool): If True, un-squeeze the sample images.
+    """
     d_optimizer = torch.optim.Adam(discriminator.parameters(), lr=cfg.lr)
     g_optimizer = torch.optim.Adam(generator.parameters(), lr=cfg.lr)
     d_scheduler = StepLR(d_optimizer, step_size=10, gamma=0.5)
