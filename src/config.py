@@ -8,9 +8,11 @@ class ExperimentConfig:
     model: str
     batch_size: int
     num_epochs: int
-    lr: float
+    lr_d: float
+    lr_g: float
     device: str
     wandb: bool
+    hp_tuning: bool
 
 
 @dataclass

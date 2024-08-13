@@ -103,7 +103,7 @@ def training_loop(
     criterion: nn.Module,
     cfg: ExperimentConfig,
     unsq: bool,
-) -> None:
+) -> float:
     """
     The main training loop.
 
@@ -115,9 +115,11 @@ def training_loop(
         criterion (nn.Module): The loss function.
         cfg (ExperimentConfig): The experiment configuration.
         unsq (bool): If True, un-squeeze the sample images.
+    Returns:
+        float: The loss.
     """
-    d_optimizer = torch.optim.Adam(discriminator.parameters(), lr=cfg.lr)
-    g_optimizer = torch.optim.Adam(generator.parameters(), lr=cfg.lr)
+    d_optimizer = torch.optim.Adam(discriminator.parameters(), lr=cfg.lr_d)
+    g_optimizer = torch.optim.Adam(generator.parameters(), lr=cfg.lr_g)
     d_scheduler = StepLR(d_optimizer, step_size=10, gamma=0.5)
     g_scheduler = StepLR(g_optimizer, step_size=10, gamma=0.5)
     for epoch in range(cfg.num_epochs):
@@ -153,3 +155,4 @@ def training_loop(
             wandb.log({"preds": img})
             wandb.log({"metrics/train/G_loss": g_loss, "metrics/train/D_loss": d_loss})
             wandb.log({"metrics/test/G_loss": avg_g_loss, "metrics/test/D_loss": avg_d_loss})
+    return g_loss

@@ -4,6 +4,7 @@ import wandb
 from src.config import ExperimentConfig
 from src.consts import IMG_SIZE, MODELS_DICT
 from src.data.preprocess import get_dataloaders, get_datasets
+from src.train.hp_tuning import run_hp_tuning
 from src.train.train_loop import training_loop
 from src.train.eval import generate_preds
 
@@ -23,12 +24,6 @@ class Experiment:
             cfg (ExperimentConfig): The experiment configuration.
         """
         self.cfg = cfg
-        if self.cfg.wandb:
-            wandb.init(
-                project="fashion-mnist",
-                name=f"{self.cfg.model}",
-                config=vars(self.cfg),
-            )
 
     def run(self) -> None:
         """
@@ -37,11 +32,20 @@ class Experiment:
         Returns:
             None. Trains the model, evaluates it, and generates predictions.
         """
-        train_dataset, test_dataset = get_datasets()
-        trainloader, testloader = get_dataloaders(train_dataset, test_dataset, self.cfg.batch_size)
-        model = MODELS_DICT[self.cfg.model]
-        discriminator = model.d(img_size=IMG_SIZE).to(self.cfg.device)
-        generator = model.g(img_size=IMG_SIZE).to(self.cfg.device)
-        criterion = nn.BCELoss()
-        training_loop(discriminator, generator, trainloader, testloader, criterion, self.cfg, model.unsqueeze)
+        if self.cfg.hp_tuning:
+            run_hp_tuning(self.cfg)
+        else:
+            if self.cfg.wandb:
+                wandb.init(
+                    project="fashion-mnist",
+                    name=f"{self.cfg.model}",
+                    config=vars(self.cfg),
+                )
+            train_dataset, test_dataset = get_datasets()
+            trainloader, testloader = get_dataloaders(train_dataset, test_dataset, self.cfg.batch_size)
+            model = MODELS_DICT[self.cfg.model]
+            discriminator = model.d(img_size=IMG_SIZE).to(self.cfg.device)
+            generator = model.g(img_size=IMG_SIZE).to(self.cfg.device)
+            criterion = nn.BCELoss()
+            training_loop(discriminator, generator, trainloader, testloader, criterion, self.cfg, model.unsqueeze)
         generate_preds(generator, train_dataset.classes, self.cfg, model.unsqueeze)
