@@ -16,7 +16,9 @@ Interactive report: [link](https://wandb.ai/zuzg-research/fashion-mnist/reports/
 | Model  | BCE Loss | 
 | ------------- | ------------- | 
 | CGAN  | ![](images/cgan/loss.png) | 
-| DCGAN  | ![](images/dcgan/loss.png) | 
+| DCGAN  | ![](images/dcgan/loss.png) |
+
+Overall DCGAN achieved better results, not only in terms of generator loss, but also visually pleasing results. However, the training took twice as much time as CGAN training.
 
 ## Running
 1. Build the container.
@@ -36,5 +38,5 @@ docker run --runtime=nvidia --env-file .env fashion --wandb 1
 ## Further improvements
 * Pretraining generator model
 * Testing other architectures
-* More extensive hyperparameter tuning
+* More extensive hyperparameter tuning (more parameters and more optuna trials)
 * Writing tests
