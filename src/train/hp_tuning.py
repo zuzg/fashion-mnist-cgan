@@ -10,7 +10,6 @@ from src.consts import IMG_SIZE, MODELS_DICT
 from src.data.preprocess import get_dataloaders, get_datasets
 from src.train.train_loop import training_loop
 
-
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
@@ -21,14 +20,24 @@ def objective(trial: optuna.trial.Trial, cfg: ExperimentConfig) -> float:
     p = trial.suggest_float("dropout", 0.0, 0.5)
 
     train_dataset, test_dataset = get_datasets()
-    trainloader, testloader = get_dataloaders(train_dataset, test_dataset, cfg.batch_size)
+    trainloader, testloader = get_dataloaders(
+        train_dataset, test_dataset, cfg.batch_size
+    )
     model = MODELS_DICT[cfg.model]
     discriminator = model.d(img_size=IMG_SIZE, dropout=p).to(cfg.device)
     generator = model.g(img_size=IMG_SIZE).to(cfg.device)
     criterion = nn.BCELoss()
     cfg.lr_d = lr_d
     cfg.lr_g = lr_g
-    loss = training_loop(discriminator, generator, trainloader, testloader, criterion, cfg, model.unsqueeze)
+    loss = training_loop(
+        discriminator,
+        generator,
+        trainloader,
+        testloader,
+        criterion,
+        cfg,
+        model.unsqueeze,
+    )
     return loss
 
 

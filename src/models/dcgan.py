@@ -3,7 +3,6 @@ from typing import Any
 import lightning as pl
 import torch
 import torch.nn as nn
-import torchvision
 from torch import Tensor
 
 from src.models.base_gan import BaseDiscriminator, BaseGenerator
@@ -134,24 +133,15 @@ class DCGAN(pl.LightningModule):
         self.automatic_optimization = False
         self.generator = DCGenerator(img_size)
         self.discriminator = DCDiscriminator(img_size)
-        self.example_input_array = (
-            torch.zeros(1, img_size, img_size),
-            torch.zeros(img_size),
-        )
 
-    def forward(self, z: tuple[torch.Tensor, torch.Tensor]) -> Any:
-        return self.generator.forward(*z)
+    def forward(self, images: torch.Tensor, labels: torch.Tensor) -> Any:
+        return self.generator.forward(images, labels)
+
+    def __call__(self, *args, **kwargs):
+        return self.forward(*args, **kwargs)
 
     def validation_step(self, *args: Any, **kwargs: Any):
         pass
-
-    def on_validation_epoch_end(self) -> None:
-        z = self.validation_z.type_as(self.generator.model[0].weight)
-        sample_imgs = self(z)
-        grid = torchvision.utils.make_grid(sample_imgs)
-        self.logger.experiment.add_image(
-            "validation/generated_images", grid, self.current_epoch
-        )
 
     def configure_optimizers(self):
         opt_g = torch.optim.Adam(self.generator.parameters())
@@ -159,23 +149,29 @@ class DCGAN(pl.LightningModule):
         return [opt_g, opt_d], []
 
     def adversarial_loss(self, y_hat: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        return nn.BCELoss()(y_hat, y)
+        return nn.BCELoss()(y_hat.flatten(), y.flatten())
 
-    def training_step(self, batch) -> dict[str, torch.Tensor]:
+    def training_step(self, batch):
         images, labels = batch
         optimizer_g, optimizer_d = self.optimizers()
         z = torch.randn(images.size(0), 100)
-
-        self.toggle_optimizer(optimizer_g)
-        self.gen_imgs = self(z)
-        sample_imgs = self.gen_imgs[:6]
-        grid = torchvision.utils.make_grid(sample_imgs.unsqueeze(1), nrow=3)
-        self.logger.experiment.add_image(
-            "train/generated_images", grid, self.current_epoch
+        fake_labels = torch.randint(
+            0,
+            10,
+            (labels.shape[0],),
         )
+        self.toggle_optimizer(optimizer_g)
+        self.gen_imgs = self(z, fake_labels)
+        sample_imgs = self.gen_imgs[:6]
+        # grid = torchvision.utils.make_grid(sample_imgs.unsqueeze(1), nrow=3)
+        # self.logger.experiment.add_image(
+        #     "train/generated_images", grid, self.current_epoch
+        # )
 
         valid = torch.ones(images.size(0), 1)
-        g_loss = self.adversarial_loss(self.discriminator(self.gen_imgs), valid)
+        g_loss = self.adversarial_loss(
+            self.discriminator(self.gen_imgs, fake_labels), valid
+        )
         self.log("g_loss", g_loss, prog_bar=True)
         self.manual_backward(g_loss)
         optimizer_g.step()
@@ -184,11 +180,11 @@ class DCGAN(pl.LightningModule):
         self.toggle_optimizer(optimizer_d)
 
         valid = torch.ones(images.size(0), 1)
-        real_loss = self.adversarial_loss(self.discriminator(images), valid)
+        real_loss = self.adversarial_loss(self.discriminator(images, labels), valid)
 
         fake = torch.ones(images.size(0), 1)
         fake_loss = self.adversarial_loss(
-            self.discriminator(self.gen_imgs.detach()), fake
+            self.discriminator(self.gen_imgs.detach(), fake_labels), fake
         )
         d_loss = (real_loss + fake_loss) / 2
         self.log("d_loss", d_loss, prog_bar=True)
