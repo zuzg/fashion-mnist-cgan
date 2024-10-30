@@ -29,6 +29,8 @@ class MNISTDataModule(pl.LightningDataModule):
         self.dims = (1, 28, 28)
         self.num_classes = 10
 
+    def prepare_data(self): ...
+
     def setup(self, stage=None):
         # Assign train/val datasets for use in dataloaders
         if stage == "fit" or stage is None:
