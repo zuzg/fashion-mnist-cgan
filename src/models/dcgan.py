@@ -128,14 +128,12 @@ class DCDiscriminator(BaseDiscriminator):
 
 
 class DCGAN(pl.LightningModule):
-    def __init__(
-        self, img_size: int, dropout: float, *args: Any, **kwargs: Any
-    ) -> None:
+    def __init__(self, img_size: int, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.save_hyperparameters()
         self.automatic_optimization = False
         self.generator = DCGenerator(img_size)
-        self.discriminator = DCDiscriminator(img_size, dropout)
+        self.discriminator = DCDiscriminator(img_size)
         self.example_input_array = (
             torch.zeros(1, img_size, img_size),
             torch.zeros(img_size),

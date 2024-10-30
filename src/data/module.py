@@ -1,5 +1,5 @@
 import lightning as pl
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.datasets import FashionMNIST
 
@@ -11,7 +11,7 @@ class MNISTDataModule(pl.LightningDataModule):
     def __init__(
         self,
         batch_size: int,
-        num_workers: int,
+        num_workers: int = 8,
         data_dir: str = str(src.consts.DATA_PATH),
     ):
         super().__init__()
@@ -25,9 +25,12 @@ class MNISTDataModule(pl.LightningDataModule):
                 transforms.Normalize((0.1307,), (0.3081,)),
             ]
         )
-
+        self.classes = []
         self.dims = (1, 28, 28)
-        self.num_classes = 10
+
+    @property
+    def num_classes(self) -> int:
+        return len(self.classes)
 
     def prepare_data(self): ...
 
@@ -37,13 +40,14 @@ class MNISTDataModule(pl.LightningDataModule):
             mnist_full = FashionMNIST(
                 self.data_dir, train=True, transform=self.transform, download=True
             )
-            self.mnist_train, self.mnist_val = random_split(mnist_full, [55000, 5000])
+            self.classes = mnist_full.classes
 
         # Assign test dataset for use in dataloader(s)
         if stage == "test" or stage is None:
             self.mnist_test = FashionMNIST(
                 self.data_dir, train=False, transform=self.transform, download=True
             )
+            self.classes = self.mnist_test.classes
 
     def train_dataloader(self) -> DataLoader:
         return DataLoader(self.mnist_train, batch_size=self.batch_size, shuffle=True)
