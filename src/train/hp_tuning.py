@@ -2,6 +2,7 @@ import logging
 from functools import partial
 
 import optuna
+import optuna_distributed
 import torch.nn as nn
 from optuna.integration.wandb import WeightsAndBiasesCallback
 
@@ -50,7 +51,8 @@ def run_hp_tuning(cfg: ExperimentConfig) -> None:
         cb = []
     study = optuna.create_study(direction="minimize")
     obj = partial(objective, cfg=cfg)
-    study.optimize(obj, n_trials=2, callbacks=cb)
+    distributed_study = optuna_distributed.from_study(study)
+    distributed_study.optimize(obj, n_trials=2)
 
     log.info("Best trial:")
     trial = study.best_trial
